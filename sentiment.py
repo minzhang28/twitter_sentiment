@@ -17,14 +17,14 @@ from unidecode import unidecode
 
 # The consumer keys can be found on your application's Details
 # page located at https://dev.twitter.com/apps (under "OAuth settings")
-consumer_key = "yILM5E8L2NHNIWomphvEXsvuv"
-consumer_secret = "kYXgT9atlJxijVJie1aqfIXop27gpOvjbAFqj0o0HyrT287pN3"
+consumer_key = ""
+consumer_secret = ""
 
 # The access tokens can be found on your applications's Details
 # page located at https://dev.twitter.com/apps (located
 # under "Your access token")
-access_token = "723745583463161857-FnZwzT3UeoV62pE6hSC6DFVNXe5myq0"
-access_token_secret = "WaBB3UWtcwAzWg8Dxqxob4Otxjtef6yVN7aGMKvlWdxBc"
+access_token = ""
+access_token_secret = ""
 
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_token_secret)
@@ -67,17 +67,16 @@ def format_tweet(tweet):
     return [change_time_zone(tweet.created_at),
             change_time_zone(tweet.created_at).hour,
             get_tweet_sentiment(cleaned_tweet),
-            tweet.user.id,
-            tweet.user.lang,
-            clean_tweet(tweet.user.location) if tweet.user.location else "none",
-            cleaned_tweet]
+            tweet.user.lang.lower(),
+            clean_tweet(tweet.user.location).lower() if tweet.user.location else "none",
+            cleaned_tweet.lower().replace("#ossummit", "")]
 
 
 def save_twitter(filename):
     api = tweepy.API(auth)
     csv_file = open(filename, 'a')
     csv_writer = csv.writer(csv_file)
-    csv_writer.writerow(["datetime,hour,sentiment,user_id,user_lang,user_location,tweet"])
+    csv_writer.writerow(["datetime,hour,sentiment,user_lang,user_location,tweet"])
     for tweet in tweepy.Cursor(api.search,
                                q="#OSSummit",
                                count=100,

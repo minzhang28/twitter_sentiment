@@ -7,40 +7,88 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
+```{r warning=F,message=F}
+##Install Packages
+#install.packages("tm")  # for text mining
+#install.packages("SnowballC") # for text stemming
+#install.packages("wordcloud") # word-cloud generator 
+#install.packages("RColorBrewer") # color palettes
+#devtools::install_github('cttobin/ggthemr')
 library(ggplot2)
 library(tidyr)
 library(dplyr)
+library(devtools)
+library(ggthemr)
+##Load Require Library
+library(tm)
+library(SnowballC)
+library(RColorBrewer)
+library(wordcloud)
 
-cls <- c(hour="numeric", user_id="character")
+ggthemr_reset()
+dust_theme <- ggthemr('light', set_theme = FALSE)
+
+
+cls <- c(hour="numeric")
 t_data <- read.csv('tweets_sentiment.csv', stringsAsFactors=FALSE )
 
 ggplot(data = t_data, aes(x=hour, fill = sentiment)) + 
-  geom_bar()
-  scale_fill_manual("legend", values = c("positive" = "#66b3ff", "neutral" = "#BEBEBE", "negative" = "#ff9999")) + 
-  scale_x_continuous(breaks = seq(0,24, 1)) +
+  geom_bar() + 
+  scale_x_continuous(breaks = seq(0,23, 1)) +
   ylab("sentiment") + 
-  ggtitle("OSS sentiment from Twitter on Aug29", subtitle = NULL)
+  ggtitle("OSS sentiment from Twitter on Aug29", subtitle = NULL) + 
+  dust_theme$theme
 ```
 
-```{r}
+```{r warning=F,message=F}
 ggplot(t_data, aes(x = factor(1), fill = factor(user_lang))) +
   geom_bar(width = 1) + 
   coord_polar(theta = "y") +
   xlab("user count") +
-  guides(fill=guide_legend(title="User Country"))
+  guides(fill=guide_legend(title="User Country")) + 
+  dust_theme$theme
 ```
-```{r}
+```{r warning=F,message=F}
 tdata_sum <- group_by(t_data, user_lang)%>%
   summarise(
     count = n()
   )
 
 ggplot(data = tdata_sum, aes(x = user_lang, fill = factor(count))) + 
-  geom_bar(stat = "identity", aes(y = count))
+  geom_bar(stat = "identity", aes(y = count)) + 
+  dust_theme$theme +
+  xlab("user language") +
+  guides(fill=guide_legend(title="User Country")) 
 ```
 
-```{r}
+```{r warning=F,message=F}
 ggplot(data = t_data, aes(x = hour, fill = sentiment)) + 
-  geom_density()
+  geom_density(alpha = 0.5) + 
+  dust_theme$theme + 
+  scale_x_continuous(breaks = seq(0,23, 1)) 
+```
+```{r warning=F,message=F}
+ggplot(subset(t_data, user_lang != "" & user_lang != "en"), aes(x = factor(1), fill = factor(user_lang))) +
+  geom_bar(width = 1, position = position_fill()) + 
+  coord_polar(theta = "y") +
+  xlab("user count") +
+  guides(fill=guide_legend(title="User Country")) + 
+  dust_theme$theme +
+  facet_wrap(~sentiment) +
+  theme(axis.text = element_blank())
+```
+```{r warning=F,message=F}
+t_data.corpus<-Corpus(VectorSource(t_data$tweet))
+##Data Cleaning and Wrangling
+t_data.clean<-tm_map(t_data.corpus, PlainTextDocument)
+t_data.clean<-tm_map(t_data.corpus,tolower)
+t_data.clean<-tm_map(t_data.clean,removeNumbers)
+t_data.clean<-tm_map(t_data.clean,removeWords,stopwords("english"))
+t_data.clean<-tm_map(t_data.clean,removePunctuation)
+t_data.clean<-tm_map(t_data.clean,stripWhitespace)
+#t_data.clean<-tm_map(t_data.clean,stemDocument)
+
+wordcloud(words = t_data.clean, min.freq = 1,
+          max.words=150, random.order=FALSE, rot.per=0.35, 
+          colors=brewer.pal(8, "Dark2"))
 ```
