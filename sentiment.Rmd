@@ -36,7 +36,7 @@ ggplot(data = t_data, aes(x=hour, fill = sentiment)) +
   geom_bar() + 
   scale_x_continuous(breaks = seq(0,23, 1)) +
   ylab("sentiment") + 
-  ggtitle("OSS sentiment from Twitter on Aug29", subtitle = NULL) + 
+  ggtitle("OSS sentiment from Twitter on Aug30", subtitle = NULL) + 
   dust_theme$theme
 ```
 
